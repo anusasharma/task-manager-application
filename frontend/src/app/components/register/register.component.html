@@ -1,0 +1,33 @@
+<div class="register-page">
+  <div class="register-card">
+    <div class="register-brand">
+      <h1>TaskFlow</h1>
+      <p class="register-subtitle">Create your account and start organizing tasks instantly.</p>
+    </div>
+
+    <div class="register-error" *ngIf="error">{{ error }}</div>
+
+    <div class="register-field">
+      <label for="name">Name</label>
+      <input id="name" type="text" [(ngModel)]="name" placeholder="Your name" />
+    </div>
+
+    <div class="register-field">
+      <label for="email">Email</label>
+      <input id="email" type="email" [(ngModel)]="email" placeholder="you@example.com" />
+    </div>
+
+    <div class="register-field">
+      <label for="password">Password</label>
+      <input id="password" type="password" [(ngModel)]="password" placeholder="Min 6 characters" />
+    </div>
+
+    <button class="register-button" (click)="register()" [disabled]="loading">
+      {{ loading ? 'Creating...' : 'Create Account' }}
+    </button>
+
+    <p class="register-link">
+      Already have an account? <a routerLink="/login">Sign in</a>
+    </p>
+  </div>
+</div>
