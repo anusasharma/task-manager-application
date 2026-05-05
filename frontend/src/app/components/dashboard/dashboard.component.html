@@ -1,163 +1,172 @@
 <div class="dashboard-layout">
-    <aside class="dashboard-sidebar">
-        <div class="sidebar-top">
-            <div class="dashboard-logo">TaskFlow</div>
-            <p class="sidebar-copy">Sign in to your account</p>
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-top">
+      <div class="dashboard-logo">TaskFlow</div>
+      <p class="sidebar-copy">Manage your day, track progress, and stay on top of every task.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active">My Tasks</a>
+    </nav>
+
+    <div class="user-panel">
+      <span class="user-avatar">{{ initials }}</span>
+      <div>
+        <div class="user-name">{{ user?.name }}</div>
+        <div class="user-email">{{ user?.email }}</div>
+      </div>
+    </div>
+
+    <button class="logout-button" (click)="logout()">Logout</button>
+  </aside>
+
+  <main class="dashboard-main">
+    <header class="dashboard-header">
+      <div>
+        <h1>My Tasks</h1>
+        <p>{{ tasks.length }} tasks · {{ doneTasks }} completed</p>
+      </div>
+      <button class="dashboard-add-button" (click)="openModal()">+ New Task</button>
+    </header>
+
+    <div class="stats-row">
+      <div class="stat-card todo">
+        <div class="stat-num">{{ todoCount }}</div>
+        <div class="stat-label">To Do</div>
+      </div>
+      <div class="stat-card in-progress">
+        <div class="stat-num">{{ inProgressCount }}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card done">
+        <div class="stat-num">{{ doneTasks }}</div>
+        <div class="stat-label">Done</div>
+      </div>
+    </div>
+
+    <div class="loading" *ngIf="loading && tasks.length === 0">Loading tasks...</div>
+
+    <div class="kanban-board" *ngIf="!loading || tasks.length > 0">
+      <div class="kanban-col" *ngFor="let col of columns">
+        <div class="col-header">
+          <span class="col-dot" [class]="col.dotClass"></span>
+          <span>{{ col.label }}</span>
+          <span class="col-count">{{ getTasksByStatus(col.status).length }}</span>
         </div>
 
-        <nav class="sidebar-nav">
-            <a class="nav-item active">My Tasks</a>
-        </nav>
+        <div class="task-list">
+          <div class="task-card" *ngFor="let task of getTasksByStatus(col.status)" [class.done-card]="task.status === 'done'">
+            <div class="task-top">
+              <span class="priority-badge" [class]="'priority-' + task.priority">{{ task.priority }}</span>
+<div class="task-actions">
+  <button type="button"
+          (click)="editTask(task); $event.stopPropagation()"
+          class="action-btn edit-btn"
+          title="Edit">
+    <span class="material-icons">edit</span>
+  </button>
 
-        <div class="user-panel">
-            <span class="user-avatar">{{ initials }}</span>
-            <div>
-                <div class="user-name">{{ user?.name }}</div>
-                <div class="user-email">{{ user?.email }}</div>
+  <button *ngIf="task.status === 'todo'"
+          type="button"
+          (click)="moveTask(task, 'in-progress'); $event.stopPropagation()"
+          class="action-btn progress-btn"
+          title="Start Progress">
+    <span class="material-icons">play_circle</span>
+  </button>
+
+  <button *ngIf="task.status === 'in-progress'"
+          type="button"
+          (click)="moveTask(task, 'todo'); $event.stopPropagation()"
+          class="action-btn todo-btn"
+          title="Move to Todo">
+    <span class="material-icons">undo</span>
+  </button>
+
+  <button *ngIf="task.status === 'in-progress'"
+          type="button"
+          (click)="moveTask(task, 'done'); $event.stopPropagation()"
+          class="action-btn done-btn"
+          title="Mark Done">
+    <span class="material-icons">check_circle</span>
+  </button>
+
+  <button *ngIf="task.status === 'done'"
+          type="button"
+          (click)="moveTask(task, 'in-progress'); $event.stopPropagation()"
+          class="action-btn reopen-btn"
+          title="Reopen">
+    <span class="material-icons">refresh</span>
+  </button>
+
+  <button type="button"
+          (click)="confirmDelete(task); $event.stopPropagation()"
+          class="action-btn delete-btn"
+          title="Delete">
+    <span class="material-icons">delete</span>
+  </button>
+</div>
+
+
             </div>
+            <h3 class="task-title" [class.done-title]="task.status === 'done'">{{ task.title }}</h3>
+            <p class="task-desc" *ngIf="task.description">{{ task.description }}</p>
+            <div class="task-due" *ngIf="task.due_date">📅 {{ task.due_date | date:'mediumDate':'UTC' }}</div>
+          </div>
+          <div class="empty-col" *ngIf="getTasksByStatus(col.status).length === 0">No tasks</div>
         </div>
-
-        <button class="logout-button" (click)="logout()">Logout</button>
-    </aside>
-
-    <main class="dashboard-main">
-        <header class="dashboard-header">
-            <div>
-                <h1>My Tasks</h1>
-                <p>{{ tasks.length }} tasks · {{ doneTasks }} completed</p>
-            </div>
-            <button class="dashboard-add-button" (click)="openModal()">+ New Task</button>
-        </header>
-
-        <div class="stats-row">
-            <div class="stat-card todo">
-                <div class="stat-num">{{ todoCount }}</div>
-                <div class="stat-label">To Do</div>
-            </div>
-            <div class="stat-card in-progress">
-                <div class="stat-num">{{ inProgressCount }}</div>
-                <div class="stat-label">In Progress</div>
-            </div>
-            <div class="stat-card done">
-                <div class="stat-num">{{ doneTasks }}</div>
-                <div class="stat-label">Done</div>
-            </div>
-        </div>
-
-        <div class="loading" *ngIf="loading && tasks.length === 0">Loading tasks...</div>
-
-        <div class="kanban-board" *ngIf="!loading || tasks.length > 0">
-            <div class="kanban-col" *ngFor="let col of columns">
-                <div class="col-header">
-                    <span class="col-dot" [class]="col.dotClass"></span>
-                    <span>{{ col.label }}</span>
-                    <span class="col-count">{{ getTasksByStatus(col.status).length }}</span>
-                </div>
-
-                <div class="task-list">
-                    <div class="task-card" *ngFor="let task of getTasksByStatus(col.status)"
-                        [class.done-card]="task.status === 'done'">
-                        <div class="task-top">
-                            <span class="priority-badge" [class]="'priority-' + task.priority">{{ task.priority
-                                }}</span>
-                            <div class="task-actions">
-                                <button type="button" (click)="editTask(task); $event.stopPropagation()"
-                                    class="action-btn edit-btn" title="Edit">
-                                    <span class="material-icons">edit</span>
-                                </button>
-
-                                <button *ngIf="task.status === 'todo'" type="button"
-                                    (click)="moveTask(task, 'in-progress'); $event.stopPropagation()"
-                                    class="action-btn progress-btn" title="Start Progress">
-                                    <span class="material-icons">play_circle</span>
-                                </button>
-
-                                <button *ngIf="task.status === 'in-progress'" type="button"
-                                    (click)="moveTask(task, 'todo'); $event.stopPropagation()"
-                                    class="action-btn todo-btn" title="Move to Todo">
-                                    <span class="material-icons">undo</span>
-                                </button>
-
-                                <button *ngIf="task.status === 'in-progress'" type="button"
-                                    (click)="moveTask(task, 'done'); $event.stopPropagation()"
-                                    class="action-btn done-btn" title="Mark Done">
-                                    <span class="material-icons">check_circle</span>
-                                </button>
-
-                                <button *ngIf="task.status === 'done'" type="button"
-                                    (click)="moveTask(task, 'in-progress'); $event.stopPropagation()"
-                                    class="action-btn reopen-btn" title="Reopen">
-                                    <span class="material-icons">refresh</span>
-                                </button>
-
-                                <button type="button" (click)="confirmDelete(task); $event.stopPropagation()"
-                                    class="action-btn delete-btn" title="Delete">
-                                    <span class="material-icons">delete</span>
-                                </button>
-                            </div>
-
-
-                        </div>
-                        <h3 class="task-title" [class.done-title]="task.status === 'done'">{{ task.title }}</h3>
-                        <p class="task-desc" *ngIf="task.description">{{ task.description }}</p>
-                        <div class="task-due" *ngIf="task.due_date">📅 {{ task.due_date | date:'mediumDate':'UTC' }}
-                        </div>
-                    </div>
-                    <div class="empty-col" *ngIf="getTasksByStatus(col.status).length === 0">No tasks</div>
-                </div>
-            </div>
-        </div>
-    </main>
+      </div>
+    </div>
+  </main>
 </div>
 
 <div class="dashboard-modal-overlay" *ngIf="showModal" (click)="closeModal()">
-    <div class="dashboard-modal" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-            <h2>{{ editingTask ? 'Edit Task' : 'New Task' }}</h2>
-            <button class="btn-close" (click)="closeModal()">✕</button>
-        </div>
-
-        <div class="dashboard-field">
-            <label for="task-title">Title *</label>
-            <input id="task-title" type="text" [(ngModel)]="form.title" placeholder="Task title" />
-        </div>
-
-        <div class="dashboard-field">
-            <label for="task-desc">Description</label>
-            <textarea id="task-desc" [(ngModel)]="form.description" rows="3"></textarea>
-        </div>
-
-        <div class="dashboard-row">
-            <div class="dashboard-field">
-                <label for="task-status">Status</label>
-                <select id="task-status" [(ngModel)]="form.status">
-                    <option value="todo">To Do</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="done">Done</option>
-                </select>
-            </div>
-            <div class="dashboard-field">
-                <label for="task-priority">Priority</label>
-                <select id="task-priority" [(ngModel)]="form.priority">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="dashboard-field">
-            <label for="task-due">Due Date</label>
-            <input id="task-due" type="date" [(ngModel)]="form.due_date" />
-        </div>
-
-        <div class="dashboard-error" *ngIf="formError">{{ formError }}</div>
-
-        <div class="dashboard-actions">
-            <button type="button" class="dashboard-secondary" (click)="closeModal()">Cancel</button>
-            <button type="button" class="dashboard-primary" (click)="saveTask()" [disabled]="saving">
-                {{ saving ? 'Saving...' : (editingTask ? 'Update' : 'Create') }}
-            </button>
-        </div>
+  <div class="dashboard-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingTask ? 'Edit Task' : 'New Task' }}</h2>
+      <button class="btn-close" (click)="closeModal()">✕</button>
     </div>
+
+    <div class="dashboard-field">
+      <label for="task-title">Title *</label>
+      <input id="task-title" type="text" [(ngModel)]="form.title" placeholder="Task title" />
+    </div>
+
+    <div class="dashboard-field">
+      <label for="task-desc">Description</label>
+      <textarea id="task-desc" [(ngModel)]="form.description" rows="3"></textarea>
+    </div>
+
+    <div class="dashboard-row">
+      <div class="dashboard-field">
+        <label for="task-status">Status</label>
+        <select id="task-status" [(ngModel)]="form.status">
+          <option value="todo">To Do</option>
+          <option value="in-progress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div class="dashboard-field">
+        <label for="task-priority">Priority</label>
+        <select id="task-priority" [(ngModel)]="form.priority">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="dashboard-field">
+      <label for="task-due">Due Date</label>
+      <input id="task-due" type="date" [(ngModel)]="form.due_date" />
+    </div>
+
+    <div class="dashboard-error" *ngIf="formError">{{ formError }}</div>
+
+    <div class="dashboard-actions">
+      <button type="button" class="dashboard-secondary" (click)="closeModal()">Cancel</button>
+      <button type="button" class="dashboard-primary" (click)="saveTask()" [disabled]="saving">
+        {{ saving ? 'Saving...' : (editingTask ? 'Update' : 'Create') }}
+      </button>
+    </div>
+  </div>
 </div>
